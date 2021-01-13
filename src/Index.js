@@ -3,9 +3,27 @@
 
 var Belt_Array = require("bs-platform/lib/js/belt_Array.js");
 var Belt_Option = require("bs-platform/lib/js/belt_Option.js");
+var EscapeHtml = require("./escapeHtml");
+
+function escapeHtml(prim) {
+  return EscapeHtml(prim);
+}
+
+function $$escape(s) {
+  var s$1 = EscapeHtml(s);
+  return s$1.replace(/ /g, "&nbsp;");
+}
+
+function currentLine(t) {
+  return Belt_Option.getWithDefault(Belt_Array.get(t.text, t.cursor.y), "");
+}
+
+function getLineAt(t, y) {
+  return Belt_Option.getWithDefault(Belt_Array.get(t.text, y), "");
+}
 
 function cursorSegmented(t) {
-  var l = Belt_Option.getWithDefault(Belt_Array.get(t.text, t.cursor.y), "");
+  var l = currentLine(t);
   var before = l.substring(0, t.cursor.x);
   var after = l.substr(t.cursor.x);
   return [
@@ -16,11 +34,12 @@ function cursorSegmented(t) {
 
 function toHtmlString(t) {
   return Belt_Array.mapWithIndex(t.text, (function (i, l) {
-                  if (i !== t.cursor.y) {
-                    return "<p class='line'>" + l + "</p>";
+                  if (i === t.cursor.y) {
+                    var match = cursorSegmented(t);
+                    return "<p class='line'><span>" + $$escape(match[0]) + "</span><span id='cursor'></span><span>" + $$escape(match[1]) + "</span></p>";
                   }
-                  var match = cursorSegmented(t);
-                  return "<p class='line'><span>" + match[0] + "</span><span id='cursor'></span><span>" + match[1] + "</span></p>";
+                  var l$1 = l.length > 0 ? l : " ";
+                  return "<p class='line'><span>" + $$escape(l$1) + "</span></p>";
                 })).join("\n");
 }
 
@@ -29,51 +48,137 @@ function render(t, dom) {
   
 }
 
+function insertLetter(t, letter) {
+  var match = cursorSegmented(t);
+  Belt_Array.set(t.text, t.cursor.y, match[0] + letter + match[1]);
+  var init = t.cursor;
+  return {
+          cursor: {
+            x: t.cursor.x + 1 | 0,
+            y: init.y
+          },
+          text: t.text
+        };
+}
+
+function carriageReturn(t) {
+  var match = cursorSegmented(t);
+  Belt_Array.set(t.text, t.cursor.y, match[0]);
+  t.text.splice(t.cursor.y + 1 | 0, 0, match[1]);
+  return {
+          cursor: {
+            x: 0,
+            y: t.cursor.y + 1 | 0
+          },
+          text: t.text
+        };
+}
+
+function arrowLeft(t) {
+  var x = t.cursor.x;
+  var y = t.cursor.y;
+  var cursor = x === 0 ? (
+      y === 0 ? ({
+            x: 0,
+            y: 0
+          }) : ({
+            x: getLineAt(t, y - 1 | 0).length,
+            y: y - 1 | 0
+          })
+    ) : ({
+        x: x - 1 | 0,
+        y: y
+      });
+  return {
+          cursor: cursor,
+          text: t.text
+        };
+}
+
+function arrowRight(t) {
+  var x = t.cursor.x;
+  var y = t.cursor.y;
+  var l = currentLine(t);
+  var lLength = l.length;
+  var cursor = x === lLength ? (
+      (y + 1 | 0) === t.text.length ? t.cursor : ({
+            x: 0,
+            y: y + 1 | 0
+          })
+    ) : ({
+        x: x + 1 | 0,
+        y: y
+      });
+  return {
+          cursor: cursor,
+          text: t.text
+        };
+}
+
+var TextOperations = {
+  insertLetter: insertLetter,
+  carriageReturn: carriageReturn,
+  arrowLeft: arrowLeft,
+  arrowRight: arrowRight
+};
+
 function handleEvent(tRef, dom, $$event) {
   var t = tRef.contents;
   var letter = $$event.key;
   var isContentKey = letter.length === 1;
-  if (!isContentKey) {
-    return ;
+  console.log(letter);
+  if (isContentKey) {
+    tRef.contents = insertLetter(t, letter);
+  } else {
+    switch (letter) {
+      case "ArrowLeft" :
+          tRef.contents = arrowLeft(t);
+          break;
+      case "ArrowRight" :
+          tRef.contents = arrowRight(t);
+          break;
+      case "Enter" :
+          tRef.contents = carriageReturn(t);
+          break;
+      default:
+        
+    }
   }
-  var match = cursorSegmented(t);
-  Belt_Array.set(t.text, t.cursor.y, match[0] + letter + match[1]);
-  var init = t.cursor;
-  tRef.contents = {
-    cursor: {
-      x: t.cursor.x + 1 | 0,
-      y: init.y
-    },
-    text: t.text
-  };
   return render(tRef.contents, dom);
 }
 
 var Editor = {
+  $$escape: $$escape,
+  currentLine: currentLine,
+  getLineAt: getLineAt,
   cursorSegmented: cursorSegmented,
   toHtmlString: toHtmlString,
   render: render,
+  TextOperations: TextOperations,
   handleEvent: handleEvent
 };
 
 function init(editorDom) {
+  var state_cursor = {
+    x: 3,
+    y: 0
+  };
+  var state_text = [
+    "Hello,",
+    "This is a long line."
+  ];
   var state = {
-    contents: {
-      cursor: {
-        x: 3,
-        y: 0
-      },
-      text: [
-        "Hello,",
-        "This is a long line."
-      ]
-    }
+    cursor: state_cursor,
+    text: state_text
+  };
+  var state$1 = {
+    contents: state
   };
   editorDom.addEventListener("keydown", (function ($$event) {
-          return handleEvent(state, editorDom, $$event);
+          return handleEvent(state$1, editorDom, $$event);
         }));
   editorDom.focus();
-  return render(state.contents, editorDom);
+  return render(state$1.contents, editorDom);
 }
 
 function start(param) {
@@ -84,6 +189,7 @@ function start(param) {
 
 window.onload = start;
 
+exports.escapeHtml = escapeHtml;
 exports.Editor = Editor;
 exports.init = init;
 exports.start = start;
