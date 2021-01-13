@@ -23,6 +23,10 @@ module Editor = {
     t.text[t.cursor.y]->Option.getWithDefault("")
   }
 
+  let getLine = (t, y) => {
+    t.text[y]
+  }
+
   let getLineAt = (t, y) => {
     t.text[y]->Option.getWithDefault("")
   }
@@ -88,9 +92,9 @@ module Editor = {
       let x = t.cursor.x
       let y = t.cursor.y
       let l = currentLine(t)
-      let lLength = Js.String.length(l)
+      let lineLen = Js.String.length(l)
       let cursor = {
-        if x == lLength {
+        if x == lineLen {
           if y + 1 == Js.Array.length(t.text) {
             t.cursor
           } else {
@@ -98,6 +102,45 @@ module Editor = {
           }
         } else {
           {x: x + 1, y: y}
+        }
+      }
+      {...t, cursor: cursor}
+    }
+
+    let arrowDown = t => {
+      let x = t.cursor.x
+      let y = t.cursor.y
+      let cursor = {
+        /* Opportunity: line = getLineOpt(..); switch(line) { Some(x) => } */
+        if y + 1 == Js.Array.length(t.text) {
+          t.cursor
+        } else {
+          let nextLineLen = Js.String.length(getLineAt(t, y + 1))
+          if x > nextLineLen {
+            {x: nextLineLen, y: y + 1}
+          } else {
+            {x: x, y: y + 1}
+          }
+        }
+      }
+      {...t, cursor: cursor}
+    }
+
+    let arrowUp = t => {
+      let x = t.cursor.x
+      let y = t.cursor.y
+      let cursor = {
+        /* Opportunity: line = getLineOpt(..); switch(line) { Some(x) => } */
+        switch getLine(t, y - 1) {
+        | Some(line) => {
+            let len = Js.String.length(line)
+            if x > len {
+              {x: len, y: y - 1}
+            } else {
+              {x: x, y: y - 1}
+            }
+          }
+        | None => t.cursor
         }
       }
       {...t, cursor: cursor}
@@ -120,6 +163,8 @@ module Editor = {
       | "Enter" => tRef := TextOperations.carriageReturn(t)
       | "ArrowLeft" => tRef := TextOperations.arrowLeft(t)
       | "ArrowRight" => tRef := TextOperations.arrowRight(t)
+      | "ArrowDown" => tRef := TextOperations.arrowDown(t)
+      | "ArrowUp" => tRef := TextOperations.arrowUp(t)
       | _ => ()
       }
     }

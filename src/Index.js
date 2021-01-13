@@ -18,6 +18,10 @@ function currentLine(t) {
   return Belt_Option.getWithDefault(Belt_Array.get(t.text, t.cursor.y), "");
 }
 
+function getLine(t, y) {
+  return Belt_Array.get(t.text, y);
+}
+
 function getLineAt(t, y) {
   return Belt_Option.getWithDefault(Belt_Array.get(t.text, y), "");
 }
@@ -99,8 +103,8 @@ function arrowRight(t) {
   var x = t.cursor.x;
   var y = t.cursor.y;
   var l = currentLine(t);
-  var lLength = l.length;
-  var cursor = x === lLength ? (
+  var lineLen = l.length;
+  var cursor = x === lineLen ? (
       (y + 1 | 0) === t.text.length ? t.cursor : ({
             x: 0,
             y: y + 1 | 0
@@ -115,11 +119,58 @@ function arrowRight(t) {
         };
 }
 
+function arrowDown(t) {
+  var x = t.cursor.x;
+  var y = t.cursor.y;
+  var cursor;
+  if ((y + 1 | 0) === t.text.length) {
+    cursor = t.cursor;
+  } else {
+    var nextLineLen = getLineAt(t, y + 1 | 0).length;
+    cursor = x > nextLineLen ? ({
+          x: nextLineLen,
+          y: y + 1 | 0
+        }) : ({
+          x: x,
+          y: y + 1 | 0
+        });
+  }
+  return {
+          cursor: cursor,
+          text: t.text
+        };
+}
+
+function arrowUp(t) {
+  var x = t.cursor.x;
+  var y = t.cursor.y;
+  var line = Belt_Array.get(t.text, y - 1 | 0);
+  var cursor;
+  if (line !== undefined) {
+    var len = line.length;
+    cursor = x > len ? ({
+          x: len,
+          y: y - 1 | 0
+        }) : ({
+          x: x,
+          y: y - 1 | 0
+        });
+  } else {
+    cursor = t.cursor;
+  }
+  return {
+          cursor: cursor,
+          text: t.text
+        };
+}
+
 var TextOperations = {
   insertLetter: insertLetter,
   carriageReturn: carriageReturn,
   arrowLeft: arrowLeft,
-  arrowRight: arrowRight
+  arrowRight: arrowRight,
+  arrowDown: arrowDown,
+  arrowUp: arrowUp
 };
 
 function handleEvent(tRef, dom, $$event) {
@@ -131,11 +182,17 @@ function handleEvent(tRef, dom, $$event) {
     tRef.contents = insertLetter(t, letter);
   } else {
     switch (letter) {
+      case "ArrowDown" :
+          tRef.contents = arrowDown(t);
+          break;
       case "ArrowLeft" :
           tRef.contents = arrowLeft(t);
           break;
       case "ArrowRight" :
           tRef.contents = arrowRight(t);
+          break;
+      case "ArrowUp" :
+          tRef.contents = arrowUp(t);
           break;
       case "Enter" :
           tRef.contents = carriageReturn(t);
@@ -150,6 +207,7 @@ function handleEvent(tRef, dom, $$event) {
 var Editor = {
   $$escape: $$escape,
   currentLine: currentLine,
+  getLine: getLine,
   getLineAt: getLineAt,
   cursorSegmented: cursorSegmented,
   toHtmlString: toHtmlString,
