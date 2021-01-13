@@ -1,0 +1,11 @@
+main {
+  padding: 1rem;
+}
+
+.editor {
+  width: 400px;
+  height: 300px;
+  margin: 1rem auto;
+  padding: 1rem;
+  border: 2px solid rgb(212, 206, 206);
+}

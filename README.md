@@ -1,21 +1,24 @@
-# ReScript Project Template
-
-The only official ReScript starter template.
-
-## Installation
+## Setup
 
 ```sh
 npm install
+npm run clean; npm run start
+npx webpack -w
+open localhost:4500
 ```
 
-## Build
+## Avenues for complexity
 
-- Build: `npm run build`
-- Clean: `npm run clean`
-- Build & watch: `npm run start`
+- Mobile device support
 
-## Run
+- Use position: absolute for rendering text, and do layoutting ourselves.
+  Implement HitTesting as well since we will no longer have that from the
+  browser
+  (https://github.com/pixijs/pixi.js/blob/dev/packages/interaction/src/TreeSearch.ts)
 
-```sh
-node src/Demo.bs.js
-```
+- Cross-browser support (for eg:
+  https://stackoverflow.com/questions/4194163/detect-printable-keys/38802011#comment89017864_38802011)
+
+- Implement MarkDown support
+
+- Use WebGL

@@ -1,0 +1,22 @@
+@keyframes blink {
+  from {
+    border-left-color: black;
+  }
+  to {
+    border-left-color: black;
+  }
+  50% {
+    border-left-color: transparent;
+  }
+}
+
+#cursor {
+  border-left: 1px solid black;
+  width: 1px;
+  height: 12px;
+  -webkit-animation: 1s blink step-end infinite;
+  -moz-animation: 1s blink step-end infinite;
+  -ms-animation: 1s blink step-end infinite;
+  -o-animation: 1s blink step-end infinite;
+  animation: 1s blink step-end infinite;
+}
