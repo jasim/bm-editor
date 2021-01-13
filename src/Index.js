@@ -65,6 +65,40 @@ function insertLetter(t, letter) {
         };
 }
 
+function backspace(t) {
+  var x = t.cursor.x;
+  var y = t.cursor.y;
+  if (x === 0) {
+    if (y === 0) {
+      return t;
+    }
+    var curLine = currentLine(t);
+    var prevLine = getLineAt(t, y - 1 | 0);
+    var x$1 = prevLine.length;
+    var l = prevLine + curLine;
+    t.text.splice(t.cursor.y, 1);
+    Belt_Array.set(t.text, y - 1 | 0, l);
+    return {
+            cursor: {
+              x: x$1,
+              y: y - 1 | 0
+            },
+            text: t.text
+          };
+  }
+  var l$1 = currentLine(t);
+  var l$2 = l$1.substring(0, t.cursor.x - 1 | 0) + l$1.substring(t.cursor.x);
+  Belt_Array.set(t.text, t.cursor.y, l$2);
+  var init = t.cursor;
+  return {
+          cursor: {
+            x: t.cursor.x - 1 | 0,
+            y: init.y
+          },
+          text: t.text
+        };
+}
+
 function carriageReturn(t) {
   var match = cursorSegmented(t);
   Belt_Array.set(t.text, t.cursor.y, match[0]);
@@ -166,6 +200,7 @@ function arrowUp(t) {
 
 var TextOperations = {
   insertLetter: insertLetter,
+  backspace: backspace,
   carriageReturn: carriageReturn,
   arrowLeft: arrowLeft,
   arrowRight: arrowRight,
@@ -178,6 +213,7 @@ function handleEvent(tRef, dom, $$event) {
   var letter = $$event.key;
   var isContentKey = letter.length === 1;
   console.log(letter);
+  $$event.preventDefault();
   if (isContentKey) {
     tRef.contents = insertLetter(t, letter);
   } else {
@@ -193,6 +229,9 @@ function handleEvent(tRef, dom, $$event) {
           break;
       case "ArrowUp" :
           tRef.contents = arrowUp(t);
+          break;
+      case "Backspace" :
+          tRef.contents = backspace(t);
           break;
       case "Enter" :
           tRef.contents = carriageReturn(t);

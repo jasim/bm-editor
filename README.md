@@ -7,18 +7,21 @@ npx webpack -w
 open localhost:4500
 ```
 
-## Avenues for complexity
+## Further dev
 
-- Mobile device support
+- Mobile devices
 
-- Use position: absolute for rendering text, and do layoutting ourselves.
-  Implement HitTesting as well since we will no longer have that from the
-  browser
+- Word wrap
+
+- Multicursor
+
+- Use position: absolute for rendering text, do layoutting.
+  Will then need hit-testing.
   (https://github.com/pixijs/pixi.js/blob/dev/packages/interaction/src/TreeSearch.ts)
 
 - Cross-browser support (for eg:
   https://stackoverflow.com/questions/4194163/detect-printable-keys/38802011#comment89017864_38802011)
 
-- Implement MarkDown support
+- Live Markdown
 
-- Use WebGL
+- WebGL

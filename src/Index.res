@@ -64,6 +64,33 @@ module Editor = {
       {...t, cursor: {...t.cursor, x: t.cursor.x + 1}}
     }
 
+    let backspace = t => {
+      let x = t.cursor.x
+      let y = t.cursor.y
+      if x == 0 {
+        if y == 0 {
+          t
+        } else {
+          /* First letter in the line, so move the current line to end of prev
+           line */
+          let curLine = currentLine(t)
+          let prevLine = getLineAt(t, y - 1)
+          let x = Js.String.length(prevLine)
+          let l = prevLine ++ curLine
+          t.text |> Js.Array.spliceInPlace(~pos=t.cursor.y, ~remove=1, ~add=[]) |> ignore
+          ignore(t.text[y - 1] = l)
+          {...t, cursor: {x: x, y: y - 1}}
+        }
+      } else {
+        let l = currentLine(t)
+        let l =
+          Js.String.substring(~from=0, ~to_=t.cursor.x - 1, l) ++
+          Js.String.substringToEnd(~from=t.cursor.x, l)
+        ignore(t.text[t.cursor.y] = l)
+        {...t, cursor: {...t.cursor, x: t.cursor.x - 1}}
+      }
+    }
+
     let carriageReturn = t => {
       let (before, after) = cursorSegmented(t)
       {t.text[t.cursor.y] = before} |> ignore
@@ -130,7 +157,6 @@ module Editor = {
       let x = t.cursor.x
       let y = t.cursor.y
       let cursor = {
-        /* Opportunity: line = getLineOpt(..); switch(line) { Some(x) => } */
         switch getLine(t, y - 1) {
         | Some(line) => {
             let len = Js.String.length(line)
@@ -149,13 +175,13 @@ module Editor = {
 
   let handleEvent = (tRef, dom, event) => {
     let t = tRef.contents
-    let i = event["keyCode"]
     let letter = event["key"]
     let isContentKey = {
       /* https://stackoverflow.com/a/38802011 */
       Js.String.length(letter) == 1
     }
     Js.log(letter)
+    event["preventDefault"]()
     if isContentKey {
       tRef := TextOperations.insertLetter(t, letter)
     } else {
@@ -165,6 +191,7 @@ module Editor = {
       | "ArrowRight" => tRef := TextOperations.arrowRight(t)
       | "ArrowDown" => tRef := TextOperations.arrowDown(t)
       | "ArrowUp" => tRef := TextOperations.arrowUp(t)
+      | "Backspace" => tRef := TextOperations.backspace(t)
       | _ => ()
       }
     }
