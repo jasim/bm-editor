@@ -138,16 +138,15 @@ module Editor = {
       let x = t.cursor.x
       let y = t.cursor.y
       let cursor = {
-        /* Opportunity: line = getLineOpt(..); switch(line) { Some(x) => } */
-        if y + 1 == Js.Array.length(t.text) {
-          t.cursor
-        } else {
-          let nextLineLen = Js.String.length(getLineAt(t, y + 1))
-          if x > nextLineLen {
-            {x: nextLineLen, y: y + 1}
+        switch getLine(t, y + 1) {
+        | Some(nextLine) =>
+          let len = Js.String.length(nextLine)
+          if x > len {
+            {x: len, y: y + 1}
           } else {
             {x: x, y: y + 1}
           }
+        | None => t.cursor
         }
       }
       {...t, cursor: cursor}
@@ -158,8 +157,8 @@ module Editor = {
       let y = t.cursor.y
       let cursor = {
         switch getLine(t, y - 1) {
-        | Some(line) => {
-            let len = Js.String.length(line)
+        | Some(prevLine) => {
+            let len = Js.String.length(prevLine)
             if x > len {
               {x: len, y: y - 1}
             } else {
@@ -184,6 +183,8 @@ module Editor = {
     event["preventDefault"]()
     if isContentKey {
       tRef := TextOperations.insertLetter(t, letter)
+    } else if event["shiftKey"] {
+      ()
     } else {
       switch letter {
       | "Enter" => tRef := TextOperations.carriageReturn(t)

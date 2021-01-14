@@ -156,18 +156,19 @@ function arrowRight(t) {
 function arrowDown(t) {
   var x = t.cursor.x;
   var y = t.cursor.y;
+  var nextLine = Belt_Array.get(t.text, y + 1 | 0);
   var cursor;
-  if ((y + 1 | 0) === t.text.length) {
-    cursor = t.cursor;
-  } else {
-    var nextLineLen = getLineAt(t, y + 1 | 0).length;
-    cursor = x > nextLineLen ? ({
-          x: nextLineLen,
+  if (nextLine !== undefined) {
+    var len = nextLine.length;
+    cursor = x > len ? ({
+          x: len,
           y: y + 1 | 0
         }) : ({
           x: x,
           y: y + 1 | 0
         });
+  } else {
+    cursor = t.cursor;
   }
   return {
           cursor: cursor,
@@ -178,10 +179,10 @@ function arrowDown(t) {
 function arrowUp(t) {
   var x = t.cursor.x;
   var y = t.cursor.y;
-  var line = Belt_Array.get(t.text, y - 1 | 0);
+  var prevLine = Belt_Array.get(t.text, y - 1 | 0);
   var cursor;
-  if (line !== undefined) {
-    var len = line.length;
+  if (prevLine !== undefined) {
+    var len = prevLine.length;
     cursor = x > len ? ({
           x: len,
           y: y - 1 | 0
@@ -216,7 +217,7 @@ function handleEvent(tRef, dom, $$event) {
   $$event.preventDefault();
   if (isContentKey) {
     tRef.contents = insertLetter(t, letter);
-  } else {
+  } else if (!$$event.shiftKey) {
     switch (letter) {
       case "ArrowDown" :
           tRef.contents = arrowDown(t);
