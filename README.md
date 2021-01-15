@@ -11,6 +11,10 @@ open localhost:4500
 
 - Mouse
 
+- Text mode editor
+
+- Line highlight
+
 - Line numbers
 
 - Scroll
@@ -32,3 +36,11 @@ open localhost:4500
 
 - Cross-browser support (for eg:
   https://stackoverflow.com/questions/4194163/detect-printable-keys/38802011#comment89017864_38802011)
+
+# Notes
+
+### Selection: Anchor, Start/End
+
+https://draftjs.org/docs/api-reference-selection-state/
+
+> The SelectionState therefore exposes both anchor/focus values and start/end values. When managing selection behavior, we recommend that you work with anchor and focus values to maintain selection direction. When managing content operations, however, we recommend that you use start and end values.
